@@ -11,17 +11,38 @@ function Game() {
     this.incrementDistance = function() {
         this.distance++;
     }
+
     this.drawDistance = function() {
         ctx.font = "16px Ariel";
         ctx.fillStyle = "#4B4B4B";
         ctx.fillText("Distance: " + this.distance, 8, 20);
     }
+
     this.restart = function() {
         alert("You perished.\nDistance: " + this.distance);
         document.location.reload();
     }
 
+    this.startScreen = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = "60px Ariel";
+        ctx.fillStyle = "#4B4B4B";
+        ctx.fillText("The bird that flaps", 20, canvas.height/3);
+        ctx.font = "30px Ariel";
+        ctx.fillText("Press space to start", 120, canvas.height/2);
+    }
 }
+
+function StateMachine() {
+    this.startScreen = true;
+    this.gameLoop    = false;
+
+    this.startGame = function() {
+        startScreen = false;
+        gameLoop    = true;
+    }
+}
+
 function Physics() {
     this.terminalVelocity = 4;
     this.acceleration     = 0.05;
@@ -154,34 +175,44 @@ function Gates() {
         var g = 0;
         for (var i = 0; i < this.gatesArr.length; i++) {
             g = this.gatesArr[i];
-            if (!(bird.x + bird.size < g.topX || bird.x - bird.size > g.topX + g.width 
-                || bird.y + bird.size < g.topY || bird.y - bird.size > g.topY + g.topHeight) 
-                || !(bird.x + bird.size < g.bottomX || bird.x - bird.size > g.bottomX + g.width 
-                || bird.y + bird.size < g.bottomY || bird.y - bird.size> g.bottomY + g.bottomHeight)) {
+            if (!(bird.x + bird.size < g.topX 
+                || bird.x - bird.size > g.topX + g.width 
+                || bird.y + bird.size < g.topY 
+                || bird.y - bird.size > g.topY + g.topHeight) 
+                || !(bird.x + bird.size < g.bottomX 
+                || bird.x - bird.size > g.bottomX + g.width 
+                || bird.y + bird.size < g.bottomY 
+                || bird.y - bird.size> g.bottomY + g.bottomHeight)) {
                 game.restart();
             }
         }
     }
 }
 
-var bird    = new Bird();
-var gates   = new Gates();
-var physics = new Physics();
-var game    = new Game();
+var bird         = new Bird();
+var gates        = new Gates();
+var physics      = new Physics();
+var game         = new Game();
+var stateMachine = new StateMachine();
 bird.register();
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    bird.draw();
-    bird.applyGravity();
-    bird.subsequentFlaps();
-    gates.drawAll();
-    gates.moveAll();
-    gates.addGates();
-    gates.destroyGates();
-    gates.detectCollisions();
-    game.incrementDistance();
-    game.drawDistance();
+    if (stateMachine.gameLoop) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        bird.draw();
+        bird.applyGravity();
+        bird.subsequentFlaps();
+        gates.drawAll();
+        gates.moveAll();
+        gates.addGates();
+        gates.destroyGates();
+        gates.detectCollisions();
+        game.incrementDistance();
+        game.drawDistance();
+    }
+    else if (stateMachine.startScreen) {
+        game.startScreen();
+    }
 }
 
 // call draw every 10ms
