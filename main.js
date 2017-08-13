@@ -1,32 +1,39 @@
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 
-document.addEventListener("keydown", keyDownHandler, false);
-document.addEventListener("keyup", keyUpHandler, false);
-
 function canvas() {
-    this.width = 800;
+    this.width  = 800;
     this.height = 600;
 }
-function keyDownHandler(e) {
-    if (e.keyCode == 32) {
-        bird.flap();
+
+function Game() {
+    this.distance = 0;
+    this.incrementDistance = function() {
+        this.distance++;
     }
-}
+    this.drawDistance = function() {
+        ctx.font = "16px Ariel";
+        ctx.fillStyle = "#4B4B4B";
+        ctx.fillText("Distance: " + this.distance, 8, 20);
+    }
+    this.restart = function() {
+        alert("You perished.\nDistance: " + this.distance);
+        document.location.reload();
+    }
 
-function keyUpHandler(e) {
 }
-
 function Physics() {
-    this.terminalVelocity = 3;
-    this.acceleration = 0.05;
+    this.terminalVelocity = 4;
+    this.acceleration     = 0.05;
 }
 
 function Bird() {
-    this.velocity = 0;
-    this.x    = canvas.width/4;
-    this.y    = canvas.height/2;
-    this.size = 10;
+    this.velocity  = 0;
+    this.x         = canvas.width/4;
+    this.y         = canvas.height/2;
+    this.size      = 10;
+    this.flapping  = false;
+    this.flapCount = 0;
 
     this.draw = function() {
         ctx.beginPath();
@@ -39,34 +46,61 @@ function Bird() {
     this.applyGravity = function() {
     /**
      * Makes the bird fall until it hits the canvas floor
+     * Gravity doesn't apply when flapping
      */
-        if (!this.y + this.size <= canvas.height) {
+        if (!(this.y + this.size + this.velocity >= canvas.height) && !this.flapping) {
             this.y += this.velocity;
             if (this.velocity < physics.terminalVelocity) {
                 this.velocity += physics.acceleration;
             }
-          }
+        }
     }
-    this.flap = function() {
-        /**
-         * Flaps the bird up the screen
-         */
-        if (bird.y > 40) {
-            this.y -= 40;
-            this.velocity = 0;
+
+    this.register = function() {
+        var that = this;
+        window.addEventListener('keydown', function(e) {return that.flap(e);});
+    }
+
+    this.flap = function(e) {
+    /**
+     * Flaps the bird up the screen
+     */
+        // upon pressing flap
+        console.log("Flap pressed");
+        if (e.keyCode == 32) {
+            if (bird.y > 40 & !this.flapping) {
+                this.y -= 10;
+                this.velocity = 0;
+                this.flapping = true;
+                this.flapCount++;
+            }
+        }
+    }
+
+    this.subsequentFlaps = function() {
+    /**
+     * flaps the bird up smoothly for each flap press
+     */
+        if (this.flapping && this.flapCount <=4) {
+            this.y -= 10;
+            this.flapCount++;
+        }
+        else {
+            this.flapCount = 0;
+            this.flapping = false;
         }
     }
 }
 
 function Gate() {
-    this.gapSize       = 80;
-    this.topHeight     = Math.floor(Math.random() * 200);
-    this.bottomHeight  = canvas.height - (this.topHeight + this.gapSize);
-    this.topX          = canvas.width;
-    this.topY          = 0;
-    this.bottomX       = this.topX;
-    this.bottomY       = this.gapSize + this.topHeight;
-    this.width         = 20;
+    this.gapSize      = 100;
+    this.topHeight    = Math.floor(Math.random() * 200);
+    this.bottomHeight = canvas.height - (this.topHeight + this.gapSize);
+    this.topX         = canvas.width;
+    this.topY         = 0;
+    this.bottomX      = this.topX;
+    this.bottomY      = this.gapSize + this.topHeight;
+    this.width        = 40;
 
     this.draw = function() {
         ctx.beginPath()
@@ -76,14 +110,14 @@ function Gate() {
         ctx.fill();
         ctx.closePath();
     }
+
     this.move = function() {
-        /**
-         * Moves the gate to the left hand side of the screen
-         */
+    /**
+     * Moves the gate to the left hand side of the screen
+     */
         this.topX--;
         this.bottomX--;
     }
-    
 }
 
 function Gates() {
@@ -94,11 +128,13 @@ function Gates() {
             this.gatesArr[i].draw();
         }
     }
+
     this.moveAll = function() {
         for (var i = 0; i < this.gatesArr.length; i++) {
             this.gatesArr[i].move();
         }
     }
+
     this.addGates = function() {
         for (var i = 0; i < this.gatesArr.length; i++) {
             if (this.gatesArr[i].topX == (canvas.width/3) *2) {
@@ -106,12 +142,14 @@ function Gates() {
             }
         }
     }
+    
     this.destroyGates = function() {
         for (var i = 0; i < this.gatesArr.length; i++) {
             if (this.gatesArr[i].topX < -this.gatesArr[i].width)
                 this.gatesArr.shift();
         }
     }
+    
     this.detectCollisions = function() {
         var g = 0;
         for (var i = 0; i < this.gatesArr.length; i++) {
@@ -120,29 +158,30 @@ function Gates() {
                 || bird.y + bird.size < g.topY || bird.y - bird.size > g.topY + g.topHeight) 
                 || !(bird.x + bird.size < g.bottomX || bird.x - bird.size > g.bottomX + g.width 
                 || bird.y + bird.size < g.bottomY || bird.y - bird.size> g.bottomY + g.bottomHeight)) {
-            alert("You broke your neck and died");
-            document.location.reload();
+                game.restart();
             }
         }
     }
 }
 
-var bird = new Bird();
-var gates = new Gates();
+var bird    = new Bird();
+var gates   = new Gates();
 var physics = new Physics();
+var game    = new Game();
+bird.register();
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     bird.draw();
     bird.applyGravity();
+    bird.subsequentFlaps();
     gates.drawAll();
     gates.moveAll();
     gates.addGates();
     gates.destroyGates();
     gates.detectCollisions();
-
-
-
+    game.incrementDistance();
+    game.drawDistance();
 }
 
 // call draw every 10ms
