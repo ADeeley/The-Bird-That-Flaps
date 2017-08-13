@@ -6,6 +6,7 @@ function canvas() {
     this.height = 600;
 }
 
+
 function Game() {
     this.distance = 0;
     this.incrementDistance = function() {
@@ -38,10 +39,28 @@ function StateMachine() {
     this.gameLoop    = false;
 
     this.startGame = function() {
-        startScreen = false;
-        gameLoop    = true;
+        this.startScreen = false;
+        this.gameLoop    = true;
     }
 }
+
+function eventHandler(e) {
+    /**
+     * Chooses the correct keyevents depending upon the current state
+     */
+    if (e.keyCode == 32) {
+        if (stateMachine.startScreen) {
+            stateMachine.startGame();
+            console.log(stateMachine.startScreen);
+
+        }
+        else {
+            bird.flap();
+        }
+    }
+}
+
+window.addEventListener('keydown', eventHandler, false);
 
 function Physics() {
     this.terminalVelocity = 4;
@@ -77,24 +96,18 @@ function Bird() {
         }
     }
 
-    this.register = function() {
-        var that = this;
-        window.addEventListener('keydown', function(e) {return that.flap(e);});
-    }
 
-    this.flap = function(e) {
+    this.flap = function() {
     /**
      * Flaps the bird up the screen
      */
         // upon pressing flap
         console.log("Flap pressed");
-        if (e.keyCode == 32) {
             if (bird.y > 40 & !this.flapping) {
                 this.y -= 10;
                 this.velocity = 0;
                 this.flapping = true;
                 this.flapCount++;
-            }
         }
     }
 
@@ -194,7 +207,6 @@ var gates        = new Gates();
 var physics      = new Physics();
 var game         = new Game();
 var stateMachine = new StateMachine();
-bird.register();
 
 function draw() {
     if (stateMachine.gameLoop) {
