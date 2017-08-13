@@ -34,7 +34,7 @@ function Bird() {
     /**
      * Makes the bird fall until it hits the canvas floor
      */
-        if (!this.y + this.size <= canvas.height) {
+        if (!(this.y + this.size >= canvas.height)) {
             this.y++;
           }
     }
@@ -113,10 +113,6 @@ function Gates() {
             alert("You broke your neck and died");
             document.location.reload();
             }
-
-
-                
-
         }
     }
 }
