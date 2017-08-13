@@ -17,7 +17,13 @@ function keyDownHandler(e) {
 function keyUpHandler(e) {
 }
 
+function Physics() {
+    this.terminalVelocity = 3;
+    this.acceleration = 0.05;
+}
+
 function Bird() {
+    this.velocity = 0;
     this.x    = canvas.width/4;
     this.y    = canvas.height/2;
     this.size = 10;
@@ -34,8 +40,11 @@ function Bird() {
     /**
      * Makes the bird fall until it hits the canvas floor
      */
-        if (!(this.y + this.size >= canvas.height)) {
-            this.y++;
+        if (!this.y + this.size <= canvas.height) {
+            this.y += this.velocity;
+            if (this.velocity < physics.terminalVelocity) {
+                this.velocity += physics.acceleration;
+            }
           }
     }
     this.flap = function() {
@@ -44,6 +53,7 @@ function Bird() {
          */
         if (bird.y > 40) {
             this.y -= 40;
+            this.velocity = 0;
         }
     }
 }
@@ -119,6 +129,7 @@ function Gates() {
 
 var bird = new Bird();
 var gates = new Gates();
+var physics = new Physics();
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
