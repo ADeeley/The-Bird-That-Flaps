@@ -1,11 +1,24 @@
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
+var birdSprite = new Image();
+birdSprite.src = "birdSprite.bmp";
+
 
 function canvas() {
     this.width  = 800;
     this.height = 600;
 }
 
+function sprite (options) {
+    var that = {};
+
+    that.context = options.context;
+    that.width = options.width;
+    that.height = options.height;
+    that.image = options.image;
+
+    return that;
+}
 
 function Game() {
     this.distance = 0;
@@ -76,11 +89,7 @@ function Bird() {
     this.flapCount = 0;
 
     this.draw = function() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-        ctx.fillStyle = "#08457e";
-        ctx.fill();
-        ctx.closePath();
+        ctx.drawImage(birdSprite, this.x, this.y);
     }
 
     this.applyGravity = function() {
@@ -186,16 +195,17 @@ function Gates() {
     
     this.detectCollisions = function() {
         var g = 0;
+        var birdLength = bird.size * 2;
         for (var i = 0; i < this.gatesArr.length; i++) {
             g = this.gatesArr[i];
-            if (!(bird.x + bird.size < g.topX 
-                || bird.x - bird.size > g.topX + g.width 
-                || bird.y + bird.size < g.topY 
-                || bird.y - bird.size > g.topY + g.topHeight) 
-                || !(bird.x + bird.size < g.bottomX 
-                || bird.x - bird.size > g.bottomX + g.width 
-                || bird.y + bird.size < g.bottomY 
-                || bird.y - bird.size> g.bottomY + g.bottomHeight)) {
+            if (!(bird.x + birdLength < g.topX 
+                || bird.x > g.topX + g.width 
+                || bird.y + birdLength < g.topY 
+                || bird.y > g.topY + g.topHeight) 
+                || !(bird.x + birdLength < g.bottomX 
+                || bird.x > g.bottomX + g.width 
+                || bird.y + birdLength < g.bottomY 
+                || bird.y > g.bottomY + g.bottomHeight)) {
                 game.restart();
             }
         }
@@ -207,6 +217,12 @@ var gates        = new Gates();
 var physics      = new Physics();
 var game         = new Game();
 var stateMachine = new StateMachine();
+var birdVar = sprite({
+    context : ctx,
+    width : bird.size,
+    height : bird.size,
+    image : birdSprite
+});
 
 function draw() {
     if (stateMachine.gameLoop) {
@@ -221,6 +237,7 @@ function draw() {
         gates.detectCollisions();
         game.incrementDistance();
         game.drawDistance();
+
     }
     else if (stateMachine.startScreen) {
         game.startScreen();
